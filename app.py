@@ -230,6 +230,7 @@ def update_status(report_id):
     conn.close()
     return render_template("update_status.html", report=report)
 
+
 # ---------- FINDER: Report Found Luggage ----------
 @app.route("/finder/report", methods=["GET", "POST"])
 def finder_report():
@@ -302,7 +303,8 @@ def match_luggage(found_id):
     return render_template("match_luggage.html", found_item=found_item, lost_reports=lost_reports)
 
 # ---------- ADMIN: View Lost Reports ----------
-@app.route("/admin/lost_reports")
+# ---------- ADMIN: View Lost Reports + Search ----------
+@app.route("/admin/lost_reports", methods=["GET", "POST"])
 def admin_lost_reports():
     if "role" not in session or session["role"] != "admin":
         flash("Unauthorized access!", "danger")
@@ -310,11 +312,24 @@ def admin_lost_reports():
 
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM lost_reports")
+
+    search_query = ""
+    if request.method == "POST":
+        search_query = request.form["search"].strip()
+        if search_query.isdigit():
+            # If input is a number → search by report ID
+            cursor.execute("SELECT * FROM lost_reports WHERE id=?", (int(search_query),))
+        else:
+            # Otherwise → search by passenger name (case-insensitive)
+            cursor.execute("SELECT * FROM lost_reports WHERE LOWER(passenger_name) LIKE ?", ('%' + search_query.lower() + '%',))
+    else:
+        # Default → show all
+        cursor.execute("SELECT * FROM lost_reports")
+
     reports = cursor.fetchall()
     conn.close()
 
-    return render_template("admin_lost_reports.html", reports=reports)
+    return render_template("admin_lost_reports.html", reports=reports, search_query=search_query)
 
 
 if __name__ == "__main__":

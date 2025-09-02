@@ -7,6 +7,13 @@
 <body>
 <div class="container mt-4">
     <h2>🧳 Lost Luggage Reports</h2>
+
+    <!-- Search Bar -->
+    <form method="POST" class="d-flex mb-3">
+        <input type="text" name="search" class="form-control me-2" placeholder="Search by Report ID or Passenger Name" value="{{ search_query }}">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+
     <table class="table table-bordered table-striped mt-3">
         <thead>
             <tr>
@@ -37,6 +44,10 @@
                 <td>
                     <a href="{{ url_for('update_status', report_id=r[0]) }}" class="btn btn-sm btn-dark">Update</a>
                 </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="text-center text-muted">No results found</td>
             </tr>
             {% endfor %}
         </tbody>

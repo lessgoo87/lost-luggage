@@ -253,6 +253,20 @@ def finder_report():
         return redirect(url_for("finder_report"))
 
     return render_template("finder_report.html")
+# ---------- ADMIN: View Found Luggage ----------
+@app.route("/admin/found_reports")
+def admin_found_reports():
+    if "role" not in session or session["role"] != "admin":
+        flash("Unauthorized access!", "danger")
+        return redirect(url_for("home"))
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM found_reports")
+    reports = cursor.fetchall()
+    conn.close()
+
+    return render_template("admin_found_reports.html", reports=reports)
 
 
 if __name__ == "__main__":

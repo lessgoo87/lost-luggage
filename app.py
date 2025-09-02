@@ -9,49 +9,49 @@ DB_NAME = "luggage.db"
 
 # ---------- DATABASE INITIALIZATION ----------
 def init_db():
-    if not os.path.exists(DB_NAME):
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
 
-        # Users table (Passengers + Admins)
-        cursor.execute("""
-        CREATE TABLE users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            role TEXT NOT NULL CHECK(role IN ('passenger', 'admin'))
-        )
-        """)
+    # Users table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        email TEXT UNIQUE,
+        password TEXT,
+        role TEXT
+    )
+    """)
 
-        # Lost luggage reports
-        cursor.execute("""
-        CREATE TABLE lost_reports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            passenger_id INTEGER,
-            description TEXT,
-            location TEXT,
-            date_lost TEXT,
-            status TEXT DEFAULT 'Pending',
-            remarks TEXT,
-            FOREIGN KEY(passenger_id) REFERENCES users(id)
-        )
-        """)
+    # Lost luggage reports
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS lost_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        passenger_id INTEGER,
+        flight_no TEXT,
+        description TEXT,
+        last_seen TEXT,
+        date_lost TEXT,
+        status TEXT DEFAULT 'Pending',
+        remarks TEXT
+    )
+    """)
 
-        # Found luggage reports (by public/finder)
-        cursor.execute("""
-        CREATE TABLE found_reports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            description TEXT,
-            location TEXT,
-            date_found TEXT,
-            contact TEXT
-        )
-        """)
+    # Found luggage reports
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS found_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        finder_name TEXT,
+        contact TEXT,
+        description TEXT,
+        place_found TEXT,
+        date_found TEXT
+    )
+    """)
 
-        conn.commit()
-        conn.close()
-        print("Database initialized!")
+    conn.commit()
+    conn.close()
+
 
 # Call init_db when starting
 init_db()
@@ -229,6 +229,30 @@ def update_status(report_id):
 
     conn.close()
     return render_template("update_status.html", report=report)
+
+# ---------- FINDER: Report Found Luggage ----------
+@app.route("/finder/report", methods=["GET", "POST"])
+def finder_report():
+    if request.method == "POST":
+        finder_name = request.form["finder_name"]
+        contact = request.form["contact"]
+        description = request.form["description"]
+        place_found = request.form["place_found"]
+        date_found = request.form["date_found"]
+
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("""INSERT INTO found_reports 
+                          (finder_name, contact, description, place_found, date_found) 
+                          VALUES (?, ?, ?, ?, ?)""",
+                       (finder_name, contact, description, place_found, date_found))
+        conn.commit()
+        conn.close()
+
+        flash("Thank you! Your found luggage report has been submitted.", "success")
+        return redirect(url_for("finder_report"))
+
+    return render_template("finder_report.html")
 
 
 if __name__ == "__main__":

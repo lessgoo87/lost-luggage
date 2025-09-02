@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Report Found Luggage</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h2>🛄 Report Found Luggage</h2>
+    <form method="POST" class="card p-4 shadow-sm">
+        <div class="mb-3">
+            <label>Your Name (optional)</label>
+            <input type="text" name="finder_name" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>Contact (optional)</label>
+            <input type="text" name="contact" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>Luggage Description</label>
+            <input type="text" name="description" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Place Found</label>
+            <input type="text" name="place_found" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Date Found</label>
+            <input type="date" name="date_found" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Submit</button>
+    </form>
+</div>
+</body>
+</html>

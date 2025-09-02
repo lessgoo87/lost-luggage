@@ -186,6 +186,50 @@ def track_luggage():
 
     return render_template("track_luggage.html", status_data=status_data)
 
+# ---------- ADMIN DASHBOARD ----------
+@app.route("/admin/dashboard")
+def admin_dashboard():
+    if "user_id" not in session or session["role"] != "admin":
+        flash("Unauthorized access!", "danger")
+        return redirect(url_for("login"))
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("""SELECT lost_reports.id, users.name, lost_reports.flight_no, 
+                      lost_reports.description, lost_reports.status, lost_reports.remarks
+                      FROM lost_reports 
+                      JOIN users ON lost_reports.passenger_id = users.id""")
+    reports = cursor.fetchall()
+    conn.close()
+
+    return render_template("admin_dashboard.html", reports=reports)
+
+
+# ---------- UPDATE STATUS ----------
+@app.route("/admin/update/<int:report_id>", methods=["GET", "POST"])
+def update_status(report_id):
+    if "user_id" not in session or session["role"] != "admin":
+        flash("Unauthorized access!", "danger")
+        return redirect(url_for("login"))
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM lost_reports WHERE id=?", (report_id,))
+    report = cursor.fetchone()
+
+    if request.method == "POST":
+        new_status = request.form["status"]
+        remarks = request.form["remarks"]
+        cursor.execute("UPDATE lost_reports SET status=?, remarks=? WHERE id=?",
+                       (new_status, remarks, report_id))
+        conn.commit()
+        conn.close()
+        flash("Status updated successfully!", "success")
+        return redirect(url_for("admin_dashboard"))
+
+    conn.close()
+    return render_template("update_status.html", report=report)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

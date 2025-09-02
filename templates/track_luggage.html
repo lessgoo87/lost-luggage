@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Track Luggage</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h2>🔍 Track Luggage</h2>
+    <form method="POST" class="card p-4 shadow-sm mb-3">
+        <div class="mb-3">
+            <label>Enter Report ID</label>
+            <input type="number" name="report_id" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Track</button>
+    </form>
+
+    {% if status_data %}
+    <div class="alert alert-info">
+        <p><b>Report ID:</b> {{ status_data[0] }}</p>
+        <p><b>Status:</b> {{ status_data[6] }}</p>
+        <p><b>Remarks:</b> {{ status_data[7] }}</p>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

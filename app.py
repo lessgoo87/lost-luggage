@@ -122,6 +122,70 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for("home"))
 
+# ---------- PASSENGER DASHBOARD ----------
+@app.route("/passenger/dashboard")
+def passenger_dashboard():
+    if "user_id" not in session or session["role"] != "passenger":
+        flash("Unauthorized access!", "danger")
+        return redirect(url_for("login"))
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM lost_reports WHERE passenger_id=?", (session["user_id"],))
+    reports = cursor.fetchall()
+    conn.close()
+
+    return render_template("passenger_dashboard.html", reports=reports, name=session["name"])
+
+
+# ---------- REPORT LOST LUGGAGE ----------
+@app.route("/passenger/report", methods=["GET", "POST"])
+def report_luggage():
+    if "user_id" not in session or session["role"] != "passenger":
+        flash("Unauthorized access!", "danger")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        flight_no = request.form["flight_no"]
+        description = request.form["description"]
+        last_seen = request.form["last_seen"]
+        date_lost = request.form["date_lost"]
+
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("""INSERT INTO lost_reports 
+                          (passenger_id, flight_no, description, last_seen, date_lost, status, remarks) 
+                          VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                       (session["user_id"], flight_no, description, last_seen, date_lost, "Pending", ""))
+        conn.commit()
+
+        report_id = cursor.lastrowid
+        conn.close()
+
+        flash(f"Report submitted successfully! Your Report ID is {report_id}", "success")
+        return redirect(url_for("passenger_dashboard"))
+
+    return render_template("report_luggage.html")
+
+
+# ---------- TRACK LUGGAGE ----------
+@app.route("/passenger/track", methods=["GET", "POST"])
+def track_luggage():
+    status_data = None
+    if request.method == "POST":
+        report_id = request.form["report_id"]
+
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM lost_reports WHERE id=?", (report_id,))
+        status_data = cursor.fetchone()
+        conn.close()
+
+        if not status_data:
+            flash("Invalid Report ID!", "danger")
+
+    return render_template("track_luggage.html", status_data=status_data)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

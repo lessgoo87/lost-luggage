@@ -268,6 +268,54 @@ def admin_found_reports():
 
     return render_template("admin_found_reports.html", reports=reports)
 
+# ---------- ADMIN: Match Found to Lost ----------
+@app.route("/admin/match/<int:found_id>", methods=["GET", "POST"])
+def match_luggage(found_id):
+    if "role" not in session or session["role"] != "admin":
+        flash("Unauthorized access!", "danger")
+        return redirect(url_for("home"))
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    # Get found luggage details
+    cursor.execute("SELECT * FROM found_reports WHERE id=?", (found_id,))
+    found_item = cursor.fetchone()
+
+    # Get all lost luggage reports still pending
+    cursor.execute("SELECT id, description, last_seen, status FROM lost_reports WHERE status='Pending'")
+    lost_reports = cursor.fetchall()
+
+    if request.method == "POST":
+        lost_id = request.form["lost_id"]
+
+        # Update lost report status
+        cursor.execute("UPDATE lost_reports SET status=?, remarks=? WHERE id=?",
+                       ("Found", f"Matched with found report #{found_id}", lost_id))
+        conn.commit()
+        conn.close()
+
+        flash(f"Lost report {lost_id} matched with found item {found_id}", "success")
+        return redirect(url_for("admin_found_reports"))
+
+    conn.close()
+    return render_template("match_luggage.html", found_item=found_item, lost_reports=lost_reports)
+
+# ---------- ADMIN: View Lost Reports ----------
+@app.route("/admin/lost_reports")
+def admin_lost_reports():
+    if "role" not in session or session["role"] != "admin":
+        flash("Unauthorized access!", "danger")
+        return redirect(url_for("home"))
+
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM lost_reports")
+    reports = cursor.fetchall()
+    conn.close()
+
+    return render_template("admin_lost_reports.html", reports=reports)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

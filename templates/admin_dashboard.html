@@ -19,7 +19,7 @@
             <th>Remarks</th>
             <th>Action</th>
         </tr>
-        {% for r in reports %}
+        {% for r in lost_reports %}
         <tr>
             <td>{{ r[0] }}</td>
             <td>{{ r[1] }}</td>
@@ -28,6 +28,21 @@
             <td>{{ r[4] }}</td>
             <td>{{ r[5] }}</td>
             <td><a href="{{ url_for('update_status', report_id=r[0]) }}" class="btn btn-warning btn-sm">Update</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+      <h2 class="mt-5">Found Luggage Reports</h2>
+    <table class="table table-bordered table-success">
+        <tr>
+            <th>ID</th><th>Finder</th><th>Description</th><th>Location</th><th>Date</th>
+        </tr>
+        {% for found in found_reports %}
+        <tr>
+            <td>{{ found[0] }}</td>
+            <td>{{ found[1] }}</td>
+            <td>{{ found[2] }}</td>
+            <td>{{ found[3] }}</td>
+            <td>{{ found[4] }}</td>
         </tr>
         {% endfor %}
     </table>

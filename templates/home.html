@@ -10,6 +10,10 @@
         <p class="lead">Helping passengers recover their luggage</p>
         <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
         <a href="{{ url_for('register') }}" class="btn btn-success">Register</a>
+       <a href="{{ url_for('register') }}" class="btn btn-success">Passenger Register</a>
+<a href="{{ url_for('register', role='admin') }}" class="btn btn-danger">Admin Register</a>
+
+    </div>
     </div>
 </body>
 </html>

@@ -62,12 +62,15 @@ def home():
     return render_template("home.html")
     # ---------- REGISTER ----------
 @app.route("/register", methods=["GET", "POST"])
+@app.route("/register", methods=["GET", "POST"])
 def register():
+    # Get role from query parameter, default is passenger
+    role = request.args.get("role", "passenger")
+
     if request.method == "POST":
         name = request.form["name"]
         email = request.form["email"]
         password = request.form["password"]
-        role = "passenger"  # default role for registration
 
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
@@ -75,7 +78,7 @@ def register():
             cursor.execute("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
                            (name, email, password, role))
             conn.commit()
-            flash("Registration successful! Please login.", "success")
+            flash(f"Registration successful as {role}! Please login.", "success")
             return redirect(url_for("login"))
         except sqlite3.IntegrityError:
             flash("Email already registered!", "danger")
@@ -199,10 +202,17 @@ def admin_dashboard():
                       lost_reports.description, lost_reports.status, lost_reports.remarks
                       FROM lost_reports 
                       JOIN users ON lost_reports.passenger_id = users.id""")
-    reports = cursor.fetchall()
+    lost_reports = cursor.fetchall()
+    cursor.execute("""
+        SELECT found_reports.id, users.name, 
+               found_reports.description, found_reports.place_found,found_reports.date_found
+        FROM found_reports
+        JOIN users ON found_reports.id = users.id
+    """)
+    found_reports=cursor.fetchall()
     conn.close()
 
-    return render_template("admin_dashboard.html", reports=reports)
+    return render_template("admin_dashboard.html", lost_reports=lost_reports,found_reports=found_reports)
 
 
 # ---------- UPDATE STATUS ----------
